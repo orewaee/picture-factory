@@ -10,4 +10,8 @@ class SourceManager {
 
         return ImageIO.read(file)
     }
+
+    fun getSource(file: File): BufferedImage {
+        return ImageIO.read(file)
+    }
 }

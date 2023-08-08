@@ -1,32 +1,77 @@
+import java.io.File
+
+import kotlin.system.exitProcess
+
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-import java.io.File
+fun main(arguments: Array<String>) {
+    if (arguments.size != 2) {
+        println("Invalid arguments specified")
+        exitProcess(1)
+    }
 
-fun main() {
+    if (arguments[1] == "settings") {
+        println("The file with the result cannot be called that")
+        exitProcess(1)
+    }
+
+    var settings = Settings(512, 512)
+
+    val settingsFile = File("settings.json")
+    if (!settingsFile.exists()) println("Advanced settings not found so default settings are used")
+    else settings = Json.decodeFromString<Settings>(settingsFile.readText())
+
+    val (width, height, aspectRatio) = settings
+
+    println("""
+        
+        Settings:
+        width: $width
+        height: $height
+        aspectRatio: $aspectRatio
+        
+    """.trimIndent())
+
     val pictureFactory = PictureFactory()
     val sourceManager = SourceManager()
 
+    val folder = File(arguments[0])
+
+    if (!folder.exists() || !folder.isDirectory) {
+        println("Wrong folder path was specified")
+        exitProcess(1)
+    }
+
+    val files = folder.listFiles()
+
+    if (files == null || files.isEmpty()) {
+        println("An error occurred while getting files from a folder")
+        exitProcess(1)
+    }
+
     val frames = mutableListOf<String>()
 
-    val source = sourceManager.getSource("orewaee.png") ?: return println("error while getting source")
+    for (file in files) {
+        val name = file.name
+        val extension = file.extension
 
-    val config = Config(
-        (source.width * 1.0).toInt(),
-        (source.height * 1.0).toInt(),
-        15.0 / 48.0
-    )
+        println("Processing the $name file...")
 
-    frames.add(
-        pictureFactory.convert(
-            source,
-            config
-        )
-    )
+        if (extension !in arrayOf("png", "jpg")) {
+            println("Skipped")
+            continue
+        }
 
-    val result = File("static.json")
+        val source = sourceManager.getSource(file)
 
+        frames.add(pictureFactory.convert(source, settings))
+    }
+
+    val result = File(arguments[1] + ".json")
     if (!result.exists()) result.createNewFile()
 
     result.writeText(Json.encodeToString(frames))
+
+    println("\nComplete!")
 }

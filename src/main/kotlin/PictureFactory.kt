@@ -2,8 +2,6 @@ import java.awt.Color
 import java.awt.Image
 import java.awt.image.BufferedImage
 
-import java.io.File
-
 class PictureFactory {
     private fun getBrightness(red: Int, green: Int, blue: Int): Int {
         return (0.299 * red + 0.587 * green + 0.114 * blue).toInt()
@@ -27,7 +25,7 @@ class PictureFactory {
         }
     }
 
-    fun resize(bufferedImage: BufferedImage, newWidth: Int, newHeight: Int): BufferedImage {
+    private fun resize(bufferedImage: BufferedImage, newWidth: Int, newHeight: Int): BufferedImage {
         val temporary = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_DEFAULT)
         val result = BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB)
 
@@ -36,38 +34,12 @@ class PictureFactory {
         return result
     }
 
-    fun convertOld(bufferedImage: BufferedImage): String {
-        val result = mutableListOf<String>()
-
-        val height = bufferedImage.height
-        val width = bufferedImage.width
-
-        for (y in 0..<height) {
-            var row = ""
-
-            for (x in 0..<width) {
-                val color = Color(bufferedImage.getRGB(x, y))
-
-                val brightness = getBrightness(color.red, color.green, color.blue)
-
-                row += getSymbol(brightness)
-            }
-
-            result.add(row)
-        }
-
-        return result.joinToString("\n")
-    }
-
-    fun convert(source: BufferedImage, config: Config): String {
-        val (width, height, aspectRatio) = config
+    fun convert(source: BufferedImage, settings: Settings): String {
+        val (width, height, aspectRatio) = settings
 
         val result = mutableListOf<String>()
 
-        val target = resize(source,
-            width,
-            (height * aspectRatio).toInt()
-        )
+        val target = resize(source, width, (height * aspectRatio).toInt())
 
         for (y in 0..<target.height) {
             var temporary = ""
